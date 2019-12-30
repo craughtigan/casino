@@ -53,4 +53,4 @@ class Deck:
 
         :return: Card
         """
-        return self.cards.pop(rnd.randint(0, len(self.cards)))
+        return self.cards.pop(rnd.randint(0, len(self.cards)-1))
