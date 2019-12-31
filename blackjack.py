@@ -14,6 +14,11 @@ class PlayerHand:
         self.soft = False
         self.value = self.value_cards()
 
+    def reset_hand(self):
+        self.cards = []
+        self.soft = False
+        self.value = self.value_cards()
+
     def receive_card(self, deck):
         """
         Add cards to the hand from a deck and update the hand value
@@ -60,10 +65,17 @@ class Player:
 
     def set_hands(self):
         """
-        Clear the players hands.
+        Set the players hands.
         """
         for xx in range(self.hand_count):
             self.hands.append(PlayerHand([]))
+
+    def reset_hands(self):
+        """
+        Re-set the player's hands.
+        """
+        for xx in range(self.hand_count):
+            self.hands[xx] = PlayerHand([])
 
     def play(self, dealer_show, deck):
         for xx in range(len(self.hands)):
@@ -72,21 +84,30 @@ class Player:
             hand_value = hand.value
             while (stand == 0) & (hand_value < 21):
                 if hand.soft:
-                    move = BOOK_KEY[SOFT_BOOK[hand_value-1][dealer_show-1]]
+                    move = BOOK_KEY[SOFT_BOOK[hand_value][dealer_show-1]]
                 else:
-                    move = BOOK_KEY[HARD_BOOK[hand_value-1][dealer_show-1]]
+                    move = BOOK_KEY[HARD_BOOK[hand_value][dealer_show-1]]
 
                 if move == 'hit':
+                    print('Player hit! {}'.format(hand_value))
                     hand.receive_card(deck)
                 elif move == 'stand':
+                    print('Player stand! {}'.format(hand_value))
                     stand = 1
                 elif move == 'double':
+                    print('Player double! {}'.format(hand_value))
                     hand.receive_card(deck)
                     stand = 1
                 elif move == 'surrender':
+                    print('Player surrender! {}'.format(hand_value))
+                    hand.reset_hand()
                     stand = 1
 
                 hand_value = hand.value
+
+            if hand.value > 21:
+                print('Player bust ! {}'.format(hand_value))
+                hand.reset_hand()
 
 
 class Dealer(Player):
@@ -100,17 +121,19 @@ class Dealer(Player):
         for xx in range(len(self.hands)):
             hand = self.hands[xx]
             stand = 0
-            while stand == 0:
-                hand_value = hand.value
+            hand_value = hand.value
+            while (stand == 0) & (hand_value < 21):
                 if hand_value < 17:
-                    print('Hit!')
+                    print('Dealer Hit! {}'.format(hand_value))
                     hand.receive_card(deck)
-                elif hand_value > 21:
-                    print('Bust!')
-                    stand = 1
                 else:
-                    print('Stand!')
+                    print('Dealer Stand! {}'.format(hand_value))
                     stand = 1
+                hand_value = hand.value
+
+            if hand.value > 21:
+                print('Dealer Bust! {}'.format(hand_value))
+                hand.reset_hand()
 
 
 class Blackjack:
@@ -125,22 +148,67 @@ class Blackjack:
         assert deck_count > 0
         self.deck = Deck(deck_count)
 
+    def full_round(self):
+        self.deal()
+        self.hand_values()
+        self.play()
+        self.results()
+        self.clear_hands()
+
     def deal(self):
+        if len(self.deck.cards) < (len(self.players) * 4):
+            print('Shuffling!')
+            self.deck.init_deck()
+
+        print('Dealing Cards')
         for xx in range(2):
             for player in self.players:
                 for hand in player.hands:
                     hand.receive_card(self.deck)
 
     def hand_values(self):
-        for player in self.players:
+        for xx in range(len(self.players) - 1):
+            player = self.players[xx]
             for hand in player.hands:
                 print(hand.value)
 
     def play(self):
         dealer_card = self.players[-1].hands[0].cards[0]
         d_card_val = show_card_value(dealer_card)
+        print('Dealer showing {}'.format(d_card_val))
+        print('\n')
         for player in self.players:
             player.play(d_card_val, self.deck)
+        print('\n')
+
+    def results(self):
+        dealer_hand = self.players[-1].hands[0].value
+        if dealer_hand == 0:
+            print('Dealer busted!')
+        else:
+            print('Dealer Stand with {}'.format(dealer_hand))
+
+        for xx in range(len(self.players) - 1):
+            player = self.players[xx]
+            for hand in player.hands:
+                hand_value = hand.value
+                if hand_value == 0:
+                    continue
+                else:
+                    if hand_value > 21:
+                        print('Player bust! {}'.format(hand_value))
+                    elif hand_value == dealer_hand:
+                        print('Player push! {}'.format(hand_value))
+                    elif hand_value < dealer_hand:
+                        print('Player loss! {}'.format(hand_value))
+                    elif hand_value > dealer_hand:
+                        print('Player win! {}'.format(hand_value))
+                    else:
+                        print('!!! Forgot something !!!')
+
+    def clear_hands(self):
+        for player in self.players:
+            player.reset_hands()
 
 
 def show_card_value(card):
@@ -150,3 +218,5 @@ def show_card_value(card):
         return 11
     else:
         return int(card.c_type)
+
+game = Blackjack([Player(), Player()], 1)
