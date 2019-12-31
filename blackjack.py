@@ -45,15 +45,15 @@ class PlayerHand:
         """
         val = 0
         for card in self.cards:
-            if card.c_type in ('king', 'queen', 'jack'):
+            if card.c_type in ('K', 'Q', 'J'):
                 val += 10
-            elif card.c_type == 'ace':
+            elif card.c_type == 'A':
                 continue
             else:
                 val += int(card.c_type)
 
         for card in self.cards:
-            if card.c_type == 'ace':
+            if card.c_type == 'A':
                 if val + 11 < 22:
                     val += 11
                     self.soft = True
@@ -103,33 +103,46 @@ class Player:
         self.hands[hand_idx].value_cards()
 
     def play(self, dealer_show, deck):
+        """
+        Go through each hand and make moves by the book
+
+        :param dealer_show: The dealers car that is showing
+        :param deck: The deck to pull from
+        """
+
+        # Track total hands in order to increment for splits
         total_hands = len(self.hands)
         xx = 0
         while xx < total_hands:
             hand = self.hands[xx]
-            stand = 0
+            done = 0
             hand_value = hand.value
-            while (stand == 0) & (hand_value < 21):
+            while (done == 0) & (hand_value < 21):
+                # Always hit after a split
                 if len(hand.cards) == 1:
                     move = 'hit'
+                # Use split book when cards match
                 elif hand.check_split() and (hand_value not in (10, 20)):
                     c_type = hand.cards[0].c_type
                     move = BOOK_KEY[SPLIT_BOOK[c_type][dealer_show-2]]
+                # Soft book when there is a soft ace
                 elif hand.soft:
                     move = BOOK_KEY[SOFT_BOOK[hand_value][dealer_show-2]]
+                # Hard book for all other moves
                 else:
                     move = BOOK_KEY[HARD_BOOK[hand_value][dealer_show-2]]
 
+                # Execute the moves
                 if move == 'hit':
                     print('Player Hit! {}'.format(hand_value))
                     hand.receive_card(deck)
                 elif move == 'stand':
                     print('Player Stand! {}'.format(hand_value))
-                    stand = 1
+                    done = 1
                 elif move == 'double':
                     print('Player Double! {}'.format(hand_value))
                     hand.receive_card(deck)
-                    stand = 1
+                    done = 1
                 elif move == 'split':
                     print('Player Split! {}'.format(hand_value))
                     self.split_hand(xx)
@@ -137,14 +150,17 @@ class Player:
                 elif move == 'surrender':
                     print('Player Surrender! {}'.format(hand_value))
                     hand.reset_hand()
-                    stand = 1
+                    done = 1
 
                 hand_value = hand.value
             xx += 1
 
+            # Clear cards on a bust
             if hand.value > 21:
                 print('Player Bust! {}'.format(hand_value))
                 hand.reset_hand()
+
+        return 0
 
 
 class Dealer(Player):
@@ -155,19 +171,27 @@ class Dealer(Player):
         super().__init__()
 
     def play(self, dealer_show, deck):
+        """
+        The dealer makes moves based on the hand.
+
+        :param deck: the deck to pull from
+        :return:
+        """
         for xx in range(len(self.hands)):
             hand = self.hands[xx]
-            stand = 0
+            done = 0
             hand_value = hand.value
-            while (stand == 0) & (hand_value < 21):
+            while (done == 0) & (hand_value < 21):
+                # todo: Implement soft 17 hit
                 if hand_value < 17:
                     print('Dealer Hit! {}'.format(hand_value))
                     hand.receive_card(deck)
                 else:
                     print('Dealer Stand! {}'.format(hand_value))
-                    stand = 1
+                    done = 1
                 hand_value = hand.value
 
+            # Hand cleared when dealer bust
             if hand.value > 21:
                 print('Dealer Bust! {}'.format(hand_value))
                 hand.reset_hand()
@@ -186,6 +210,9 @@ class Blackjack:
         self.deck = Deck(deck_count)
 
     def full_round(self):
+        """
+        Run through an entire round of NPCs playing by the book
+        """
         self.deal()
         self.hand_values()
         self.play()
@@ -193,6 +220,9 @@ class Blackjack:
         self.clear_hands()
 
     def deal(self):
+        """
+        Deal two cards to each player and dealer in order
+        """
         if len(self.deck.cards) < (len(self.players) * 5):
             print('Shuffling!')
             self.deck.init_deck()
@@ -204,6 +234,10 @@ class Blackjack:
                     hand.receive_card(self.deck)
 
     def hand_values(self):
+        """
+        Print values of hands for NPCs but not the dealer
+        """
+        # todo: print the cards that the players have
         for xx in range(len(self.players) - 1):
             player = self.players[xx]
             for hand in player.hands:
@@ -249,9 +283,9 @@ class Blackjack:
 
 
 def show_card_value(card):
-    if card.c_type in ('king', 'queen', 'jack'):
+    if card.c_type in ('K', 'Q', 'J'):
         return 10
-    elif card.c_type == 'ace':
+    elif card.c_type == 'A':
         return 11
     else:
         return int(card.c_type)

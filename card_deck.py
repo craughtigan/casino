@@ -4,13 +4,13 @@ This file creates the classes for cards and decks of cards.
 
 import random as rnd
 
-C_TYPES = ('ace', 'king', 'queen', 'jack', '10', '9', '8', '7', '6', '5', '4', '3', '2')
+C_TYPES = ('A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2')
 SUITS = ('diamonds', 'hearts', 'spades', 'clubs')
 
 
 class Card:
     def __init__(self, c_type, suit):
-        c_type = c_type.lower()
+        c_type = c_type.upper()
         assert c_type in C_TYPES
         self.c_type = c_type
         assert suit in SUITS
@@ -39,7 +39,7 @@ class Deck:
         """
         Calculate the chance of pulling a card type from the deck.
         """
-        c_type = c_type.lower()
+        c_type = c_type.upper()
         assert c_type in C_TYPES
 
         count = 0
