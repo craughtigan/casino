@@ -28,6 +28,16 @@ class PlayerHand:
         self.cards.append(deck.draw_card())
         self.value = self.value_cards()
 
+    def check_split(self):
+        """
+        Make sure that the cards are the same type to split
+        """
+        if len(self.cards) != 2:
+            return False
+        else:
+            return ((len(self.cards) == 2)
+                    & (self.cards[0].c_type == self.cards[1].c_type))
+
     def value_cards(self):
         """
         Calculate the value of the hand based on the card-types
@@ -50,6 +60,7 @@ class PlayerHand:
                 else:
                     val += 1
                     self.soft = False
+        self.value = val
         return val
 
 
@@ -57,56 +68,82 @@ class Player:
     """
     Track the hands of the player and the moves to make on each hand.
     """
-    def __init__(self, hand_count=1):
-        assert hand_count > 0
-        self.hand_count = hand_count
+    def __init__(self, hand=None):
         self.hands = []
-        self.set_hands()
+        if hand is None:
+            self.set_hands()
+        else:
+            self.input_hand(hand)
 
     def set_hands(self):
         """
-        Set the players hands.
+        Set the players hand.
         """
-        for xx in range(self.hand_count):
-            self.hands.append(PlayerHand([]))
+        self.hands.append(PlayerHand([]))
+
+    def input_hand(self, hand):
+        """
+        Set the players hand as the input hand.
+        """
+        self.hands.append(hand)
 
     def reset_hands(self):
         """
-        Re-set the player's hands.
+        Re-set the player's hand.
         """
-        for xx in range(self.hand_count):
-            self.hands[xx] = PlayerHand([])
+        self.hands = [PlayerHand([])]
+
+    def split_hand(self, hand_idx):
+        """
+        Split a hand where the cards value matches.
+        :param hand_idx: The index of the hand to split
+        """
+        new_hand = PlayerHand([self.hands[hand_idx].cards.pop()])
+        self.hands.insert(hand_idx + 1, new_hand)
+        self.hands[hand_idx].value_cards()
 
     def play(self, dealer_show, deck):
-        for xx in range(len(self.hands)):
+        total_hands = len(self.hands)
+        xx = 0
+        while xx < total_hands:
             hand = self.hands[xx]
             stand = 0
             hand_value = hand.value
             while (stand == 0) & (hand_value < 21):
-                if hand.soft:
-                    move = BOOK_KEY[SOFT_BOOK[hand_value][dealer_show-1]]
+                if len(hand.cards) == 1:
+                    move = 'hit'
+                elif hand.check_split() and (hand_value not in (10, 20)):
+                    c_type = hand.cards[0].c_type
+                    move = BOOK_KEY[SPLIT_BOOK[c_type][dealer_show-2]]
+                elif hand.soft:
+                    move = BOOK_KEY[SOFT_BOOK[hand_value][dealer_show-2]]
                 else:
-                    move = BOOK_KEY[HARD_BOOK[hand_value][dealer_show-1]]
+                    move = BOOK_KEY[HARD_BOOK[hand_value][dealer_show-2]]
 
                 if move == 'hit':
-                    print('Player hit! {}'.format(hand_value))
+                    print('Player Hit! {}'.format(hand_value))
                     hand.receive_card(deck)
                 elif move == 'stand':
-                    print('Player stand! {}'.format(hand_value))
+                    print('Player Stand! {}'.format(hand_value))
                     stand = 1
                 elif move == 'double':
-                    print('Player double! {}'.format(hand_value))
+                    print('Player Double! {}'.format(hand_value))
                     hand.receive_card(deck)
                     stand = 1
+                elif move == 'split':
+                    print('Player Split! {}'.format(hand_value))
+                    self.split_hand(xx)
+                    total_hands += 1
                 elif move == 'surrender':
-                    print('Player surrender! {}'.format(hand_value))
+                    print('Player Surrender! {}'.format(hand_value))
                     hand.reset_hand()
                     stand = 1
 
                 hand_value = hand.value
+            xx += 1
 
             if hand.value > 21:
-                print('Player bust ! {}'.format(hand_value))
+                print('Player Bust! {}'.format(hand_value))
                 hand.reset_hand()
 
 
@@ -156,7 +193,7 @@ class Blackjack:
         self.clear_hands()
 
     def deal(self):
-        if len(self.deck.cards) < (len(self.players) * 4):
+        if len(self.deck.cards) < (len(self.players) * 5):
             print('Shuffling!')
             self.deck.init_deck()
 
@@ -219,4 +256,8 @@ def show_card_value(card):
     else:
         return int(card.c_type)
 
-game = Blackjack([Player(), Player()], 1)
+
+game = Blackjack([Player(), Player()], 2)
+for xx in range(1000):
+    game.full_round()
+
