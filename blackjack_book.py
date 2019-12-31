@@ -1,12 +1,18 @@
 """
-This file represents the 'book' for blackjack
+This file represents the 'book' for blackjack.
+
+Rules:
+Dealer hits on soft 17
+Surrender allowed but not after split
+Double after split not allowed
 """
 BOOK_KEY = {0: 'stand',
             1: 'hit',
             2: 'double',
-            3: 'surrender'}
+            3: 'surrender',
+            4: 'split'}
 
-# Dealer    2, 3, 4, 5, 6, 7, 8, 9, 10, ace   ## Player
+# Dealer         2, 3, 4, 5, 6, 7, 8, 9, 10, ace   ## Player
 HARD_BOOK = {4: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 4
              5: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 5
              6: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 6
@@ -25,7 +31,7 @@ HARD_BOOK = {4: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],  # 4
              19: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],  # 19
              20: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}  # 20
 
-# Dealer      2, 3, 4, 5, 6, 7, 8, 9, 10, ace   ## Player
+# Dealer          2, 3, 4, 5, 6, 7, 8, 9, 10, ace   ## Player
 SOFT_BOOK = {13: [1, 1, 1, 2, 2, 1, 1, 1, 1, 1],  # 13
              14: [1, 1, 1, 2, 2, 1, 1, 1, 1, 1],  # 14
              15: [1, 1, 2, 2, 2, 1, 1, 1, 1, 1],  # 15
@@ -34,3 +40,17 @@ SOFT_BOOK = {13: [1, 1, 1, 2, 2, 1, 1, 1, 1, 1],  # 13
              18: [2, 2, 2, 2, 2, 0, 0, 0, 0, 0],  # 18
              19: [0, 0, 0, 0, 2, 0, 0, 0, 0, 0],  # 19
              20: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}  # 20
+
+"""
+This book decides when to split.
+Double after split not allowed
+"""
+# Dealer            2, 3, 4, 5, 6, 7, 8, 9, 10, ace   ## Player
+SPLIT_BOOK = {'2': [1, 1, 4, 4, 4, 4, 1, 1, 1, 1],
+              '3': [1, 1, 4, 4, 4, 4, 1, 1, 1, 1],
+              '4': [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+              '6': [1, 4, 4, 4, 4, 1, 1, 1, 1, 1],
+              '7': [4, 4, 4, 4, 4, 4, 1, 1, 1, 1],
+              '8': [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+              '9': [4, 4, 4, 4, 4, 0, 4, 4, 0, 0],
+              'ace': [4, 4, 4, 4, 4, 4, 4, 4, 4, 4]}
