@@ -63,6 +63,9 @@ class PlayerHand:
         self.value = val
         return val
 
+    def print_cards(self):
+        return "Hand: " + ", ".join([card.c_type for card in self.cards])
+
 
 class Player:
     """
@@ -119,6 +122,65 @@ class Player:
             hand_value = hand.value
             while (done == 0) & (hand_value < 21):
                 # Always hit after a split
+                print('Player Value: {} {}'.format(hand_value, hand.print_cards()))
+                move = input("What is your move?")
+
+                # Execute the moves
+                if move == 'hit':
+                    print('Player Hit!')
+                    hand.receive_card(deck)
+                elif move == 'stand':
+                    print('Player Stand!')
+                    done = 1
+                elif move == 'double':
+                    print('Player Double!')
+                    # todo: disallowed double after first move
+                    hand.receive_card(deck)
+                    done = 1
+                elif move == 'split':
+                    print('Player Split!')
+                    self.split_hand(xx)
+                    total_hands += 1
+                elif move == 'surrender':
+                    print('Player Surrender!')
+                    hand.reset_hand()
+                    done = 1
+
+                hand_value = hand.value
+            xx += 1
+
+            # Clear cards on a bust
+            if hand.value > 21:
+                print('Player Bust! Value: {} {}'.format(hand_value, hand.print_cards()))
+                hand.reset_hand()
+
+        return 0
+
+
+class NPC(Player):
+    """
+    Track the hand of the dealer and the moves to make on the hand
+    """
+    def __init__(self):
+        super().__init__()
+
+    def play(self, dealer_show, deck):
+        """
+        Go through each hand and make moves by the book
+
+        :param dealer_show: The dealers car that is showing
+        :param deck: The deck to pull from
+        """
+
+        # Track total hands in order to increment for splits
+        total_hands = len(self.hands)
+        xx = 0
+        while xx < total_hands:
+            hand = self.hands[xx]
+            done = 0
+            hand_value = hand.value
+            while (done == 0) & (hand_value < 21):
+                # Always hit after a split
                 if len(hand.cards) == 1:
                     move = 'hit'
                 # Use split book when cards match
@@ -134,21 +196,21 @@ class Player:
 
                 # Execute the moves
                 if move == 'hit':
-                    print('Player Hit! {}'.format(hand_value))
+                    print('NPC Hit! Value: {} {}'.format(hand_value, hand.print_cards()))
                     hand.receive_card(deck)
                 elif move == 'stand':
-                    print('Player Stand! {}'.format(hand_value))
+                    print('NPC Stand! Value: {} {}'.format(hand_value, hand.print_cards()))
                     done = 1
                 elif move == 'double':
-                    print('Player Double! {}'.format(hand_value))
+                    print('NPC Double! Value: {} {}'.format(hand_value, hand.print_cards()))
                     hand.receive_card(deck)
                     done = 1
                 elif move == 'split':
-                    print('Player Split! {}'.format(hand_value))
+                    print('NPC Split! Value: {} {}'.format(hand_value, hand.print_cards()))
                     self.split_hand(xx)
                     total_hands += 1
                 elif move == 'surrender':
-                    print('Player Surrender! {}'.format(hand_value))
+                    print('NPC Surrender! Value: {} {}'.format(hand_value, hand.print_cards()))
                     hand.reset_hand()
                     done = 1
 
@@ -157,7 +219,7 @@ class Player:
 
             # Clear cards on a bust
             if hand.value > 21:
-                print('Player Bust! {}'.format(hand_value))
+                print('NPC Bust! Value: {} {}'.format(hand_value, hand.print_cards()))
                 hand.reset_hand()
 
         return 0
@@ -241,18 +303,24 @@ class Blackjack:
         for xx in range(len(self.players) - 1):
             player = self.players[xx]
             for hand in player.hands:
-                print(hand.value)
+                print("Value: " + str(hand.value) + " " + hand.print_cards())
 
     def play(self):
+        """
+        Each player makes the moves for their hands
+        """
         dealer_card = self.players[-1].hands[0].cards[0]
         d_card_val = show_card_value(dealer_card)
-        print('Dealer showing {}'.format(d_card_val))
+        print('Dealer showing {}'.format(dealer_card.c_type))
         print('\n')
         for player in self.players:
             player.play(d_card_val, self.deck)
         print('\n')
 
     def results(self):
+        """
+        Print the results for remaining hands at end of the round
+        """
         dealer_hand = self.players[-1].hands[0].value
         if dealer_hand == 0:
             print('Dealer busted!')
@@ -276,6 +344,7 @@ class Blackjack:
                         print('Player win! {}'.format(hand_value))
                     else:
                         print('!!! Forgot something !!!')
+        print('\n')
 
     def clear_hands(self):
         for player in self.players:
@@ -291,7 +360,7 @@ def show_card_value(card):
         return int(card.c_type)
 
 
-game = Blackjack([Player(), Player()], 2)
+game = Blackjack([Player(), NPC()], 2)
 for xx in range(1000):
     game.full_round()
 
