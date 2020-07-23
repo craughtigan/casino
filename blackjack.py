@@ -71,8 +71,9 @@ class Player:
     """
     Track the hands of the player and the moves to make on each hand.
     """
-    def __init__(self, hand=None):
+    def __init__(self, hand=None, name='Player'):
         self.hands = []
+        self.name = name
         if hand is None:
             self.set_hands()
         else:
@@ -161,8 +162,8 @@ class NPC(Player):
     """
     Track the hand of the dealer and the moves to make on the hand
     """
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name='NPC'):
+        super().__init__(name=name)
 
     def play(self, dealer_show, deck):
         """
@@ -230,7 +231,7 @@ class Dealer(Player):
     Track the hand of the dealer and the moves to make on the hand
     """
     def __init__(self):
-        super().__init__()
+        super().__init__(name='Dealer')
 
     def play(self, dealer_show, deck):
         """
@@ -335,13 +336,13 @@ class Blackjack:
                     continue
                 else:
                     if hand_value > 21:
-                        print('Player bust! {}'.format(hand_value))
+                        print('{} bust! {}'.format(player.name, hand_value))
                     elif hand_value == dealer_hand:
-                        print('Player push! {}'.format(hand_value))
+                        print('{} push! {}'.format(player.name, hand_value))
                     elif hand_value < dealer_hand:
-                        print('Player loss! {}'.format(hand_value))
+                        print('{} loss! {}'.format(player.name, hand_value))
                     elif hand_value > dealer_hand:
-                        print('Player win! {}'.format(hand_value))
+                        print('{} win! {}'.format(player.name, hand_value))
                     else:
                         print('!!! Forgot something !!!')
         print('\n')
